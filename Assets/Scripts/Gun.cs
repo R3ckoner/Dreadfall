@@ -1,129 +1,100 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Gun : MonoBehaviour
 {
     public float damage = 10f;
     public float range = 100f;
-    public float fireRate = 15;
+    public float fireRate = 15f;
 
     public int magAmmo;
-    private int ReserveAmmount = -1;
+    private int reserveAmount;
     public int totalAmmo = 50;
     public float reloadTime = 1f;
-    // messed up some of these variables, will fix 
 
-    private bool isReloading = true;
-    
+    private bool isReloading = false;
+    private bool isFiring = false;
+
     public Camera fpsCam;
-
-    public bool weapon = false;
-
-    private float nextTimeToFire = 0f;
-    
-   // public Recoil recoil;
-
-   public AudioSource gunShot;
+    public AudioSource gunShot;
     public AudioSource reloadNoise;
 
+    public float recoilForce = 0.1f;
+    public float recoilRecoverySpeed = 1f;
 
-    
+    private Vector3 initialPosition;
 
-    
-    
-     void Start() {
-        {
-            ReserveAmmount = magAmmo;
+    private float nextTimeToFire = 0f;
 
-            
-        }
-    }
-
-    void OnEnable() {
-
-        isReloading = false;
-
-        
-    }
-    // sets amounts equal to the corresponding text object, sets conditions for reload
-    void Update()
+    private void Start()
     {
+        reserveAmount = magAmmo;
+        initialPosition = transform.localPosition;
+    }
 
+    private void OnEnable()
+    {
+        isReloading = false;
+    }
+
+    private void Update()
+    {
         if (isReloading)
             return;
-        if (ReserveAmmount <= 0 || (Input.GetKeyDown("r")))
+
+        if (reserveAmount <= 0 || Input.GetKeyDown(KeyCode.R))
         {
             StartCoroutine(Reload());
+            return;
         }
 
-        if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
+        if (Input.GetButtonDown("Fire1") && Time.time >= nextTimeToFire)
         {
-
-            Shoot();
+            StartCoroutine(Shoot());
         }
-        
+
+        // Smoothly recover from recoil
+        transform.localPosition = Vector3.Lerp(transform.localPosition, initialPosition, Time.deltaTime * recoilRecoverySpeed);
     }
-     
- 
 
-    
-
-    // performs reload
-    IEnumerator Reload ()
+    private IEnumerator Reload()
     {
-        if (totalAmmo > magAmmo){
-        isReloading = true;
+        if (totalAmmo >= magAmmo)
+        {
+            isReloading = true;
+            reloadNoise.Play();
 
-        //reloadNoise = GetComponent<AudioSource>();
-        reloadNoise.Play(0);
-        
+            yield return new WaitForSeconds(reloadTime);
 
-        yield return new WaitForSeconds(reloadTime);
+            reserveAmount = magAmmo;
+            isReloading = false;
 
-        ReserveAmmount = magAmmo;
-        isReloading = false;
-
-        totalAmmo = totalAmmo - ReserveAmmount;
-
-        
+            totalAmmo -= magAmmo - reserveAmount;
         }
     }
 
-    // fires the weapon and damages enemies
-    void Shoot()
+    private IEnumerator Shoot()
     {
-        
-        if (ReserveAmmount > 0){
-
-        gunShot = GetComponent<AudioSource>();
-        gunShot.Play(0);
-
-       // recoil.Fire();
-        
-       
-
-        ReserveAmmount --;
-        
-        
-        RaycastHit hit;
-        if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
+        if (reserveAmount > 0)
         {
-            Debug.Log(hit.transform.name);
+            isFiring = true;
+            gunShot.Play();
+            reserveAmount--;
+            nextTimeToFire = Time.time + 1f / fireRate;
 
-          // EnemyHealth health = hit.transform.GetComponent<EnemyHealth>();
+            // Apply recoil effect
+            transform.localPosition -= transform.forward * recoilForce;
 
-         //  if (health != null)
+            RaycastHit hit;
+            if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
+            {
+                Debug.Log(hit.transform.name);
+                // Apply damage or effects to the hit object here
+            }
 
-           // health.TakeDamage(damage);
+            yield return new WaitForSeconds(0.05f); // Adjust the duration of the recoil
 
+            isFiring = false;
         }
-        
-
-      //  Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
-        }
-
-        
     }
 }
