@@ -23,6 +23,9 @@ public class Gun : MonoBehaviour
     public Camera fpsCam;
     public AudioSource gunShot;
     public AudioSource reloadNoise;
+    public GameObject muzzleFlash;
+    public Transform barrelEnd;
+    public float flashDuration = 0.1f;
 
     public float recoilForce = 0.1f;
     public float recoilRecoverySpeed = 10f; // Adjust this value for smoother recovery
@@ -58,9 +61,12 @@ public class Gun : MonoBehaviour
 
         if (isFullAuto)
         {
+            
             if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
             {
                 StartCoroutine(Shoot());
+                nextTimeToFire = Time.time + 1f / fireRate;
+
             }
         }
         else
@@ -110,12 +116,22 @@ public class Gun : MonoBehaviour
         }
     }
 
-    private IEnumerator Shoot()
+private IEnumerator Shoot()
+{
+    if (reserveAmount > 0)
     {
-        if (reserveAmount > 0)
+        isFiring = true;
+
+        while (Input.GetButton("Fire1") && reserveAmount > 0)
         {
-            isFiring = true;
+            // Instantiate muzzle flash
+            muzzleFlash.SetActive(true);
+            yield return new WaitForSeconds(flashDuration);
+            muzzleFlash.SetActive(false);
+
+            // Play gun shot audio
             gunShot.Play();
+
             reserveAmount--;
             nextTimeToFire = Time.time + 1f / fireRate;
 
@@ -133,11 +149,15 @@ public class Gun : MonoBehaviour
                 // Apply damage or effects to the hit object here
             }
 
-            yield return new WaitForSeconds(0.05f); // Adjust the duration of the recoil
-
-            isFiring = false;
+            yield return new WaitForSeconds(1f / fireRate);
         }
+
+        isFiring = false;
     }
+}
+
+
+
 
     private void UpdateAmmoText()
     {
