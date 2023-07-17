@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 
 public class Gun : MonoBehaviour
 {
@@ -7,6 +8,8 @@ public class Gun : MonoBehaviour
     public float range = 100f;
     public float fireRate = 15f;
 
+    public TextMeshProUGUI magText;
+    public TextMeshProUGUI reserveText;
     public int magAmmo;
     private int reserveAmount;
     public int totalAmmo = 50;
@@ -14,15 +17,18 @@ public class Gun : MonoBehaviour
 
     private bool isReloading = false;
     private bool isFiring = false;
+    public bool isFullAuto = false; // Toggle for full-auto mode
+    public bool showReserveText = true; // Toggle for reserve text visibility
 
     public Camera fpsCam;
     public AudioSource gunShot;
     public AudioSource reloadNoise;
 
     public float recoilForce = 0.1f;
-    public float recoilRecoverySpeed = 1f;
+    public float recoilRecoverySpeed = 10f; // Adjust this value for smoother recovery
 
     private Vector3 initialPosition;
+    private Vector3 currentPosition; // Track the current position during recoil recovery
 
     private float nextTimeToFire = 0f;
 
@@ -30,6 +36,8 @@ public class Gun : MonoBehaviour
     {
         reserveAmount = magAmmo;
         initialPosition = transform.localPosition;
+        currentPosition = initialPosition;
+        UpdateAmmoText();
     }
 
     private void OnEnable()
@@ -48,13 +56,24 @@ public class Gun : MonoBehaviour
             return;
         }
 
-        if (Input.GetButtonDown("Fire1") && Time.time >= nextTimeToFire)
+        if (isFullAuto)
         {
-            StartCoroutine(Shoot());
+            if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
+            {
+                StartCoroutine(Shoot());
+            }
+        }
+        else
+        {
+            if (Input.GetButtonDown("Fire1") && Time.time >= nextTimeToFire)
+            {
+                StartCoroutine(Shoot());
+            }
         }
 
         // Smoothly recover from recoil
-        transform.localPosition = Vector3.Lerp(transform.localPosition, initialPosition, Time.deltaTime * recoilRecoverySpeed);
+        currentPosition = Vector3.Lerp(currentPosition, initialPosition, Time.deltaTime * recoilRecoverySpeed);
+        transform.localPosition = currentPosition;
     }
 
     private IEnumerator Reload()
@@ -66,10 +85,28 @@ public class Gun : MonoBehaviour
 
             yield return new WaitForSeconds(reloadTime);
 
-            reserveAmount = magAmmo;
+            int bulletsToReload = magAmmo - reserveAmount;
+            reserveAmount += bulletsToReload;
+            totalAmmo -= bulletsToReload;
+
             isReloading = false;
 
-            totalAmmo -= magAmmo - reserveAmount;
+            UpdateAmmoText();
+        }
+        else if (totalAmmo > 0)
+        {
+            isReloading = true;
+            reloadNoise.Play();
+
+            yield return new WaitForSeconds(reloadTime);
+
+            int bulletsToReload = totalAmmo;
+            reserveAmount += bulletsToReload;
+            totalAmmo -= bulletsToReload;
+
+            isReloading = false;
+
+            UpdateAmmoText();
         }
     }
 
@@ -82,8 +119,12 @@ public class Gun : MonoBehaviour
             reserveAmount--;
             nextTimeToFire = Time.time + 1f / fireRate;
 
+            // Update ammo UI text components
+            magText.text = reserveAmount.ToString();
+            UpdateReserveText();
+
             // Apply recoil effect
-            transform.localPosition -= transform.forward * recoilForce;
+            currentPosition -= transform.forward * recoilForce;
 
             RaycastHit hit;
             if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
@@ -96,5 +137,17 @@ public class Gun : MonoBehaviour
 
             isFiring = false;
         }
+    }
+
+    private void UpdateAmmoText()
+    {
+        magText.text = reserveAmount.ToString();
+        UpdateReserveText();
+    }
+
+    private void UpdateReserveText()
+    {
+        reserveText.gameObject.SetActive(showReserveText);
+        reserveText.text = totalAmmo.ToString();
     }
 }
