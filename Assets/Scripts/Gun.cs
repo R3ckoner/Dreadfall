@@ -61,12 +61,10 @@ public class Gun : MonoBehaviour
 
         if (isFullAuto)
         {
-            
             if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
             {
                 StartCoroutine(Shoot());
                 nextTimeToFire = Time.time + 1f / fireRate;
-
             }
         }
         else
@@ -116,48 +114,87 @@ public class Gun : MonoBehaviour
         }
     }
 
-private IEnumerator Shoot()
-{
-    if (reserveAmount > 0)
+    private IEnumerator Shoot()
     {
-        isFiring = true;
-
-        while (Input.GetButton("Fire1") && reserveAmount > 0)
+        if (reserveAmount > 0)
         {
-            // Instantiate muzzle flash
-            muzzleFlash.SetActive(true);
-            yield return new WaitForSeconds(flashDuration);
-            muzzleFlash.SetActive(false);
+            isFiring = true;
 
-            // Play gun shot audio
-            gunShot.Play();
-
-            reserveAmount--;
-            nextTimeToFire = Time.time + 1f / fireRate;
-
-            // Update ammo UI text components
-            magText.text = reserveAmount.ToString();
-            UpdateReserveText();
-
-            // Apply recoil effect
-            currentPosition -= transform.forward * recoilForce;
-
-            RaycastHit hit;
-            if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
+            if (!isFullAuto)
             {
-                Debug.Log(hit.transform.name);
-                // Apply damage or effects to the hit object here
+                // Single shot in semi-auto mode
+                // Instantiate muzzle flash
+                muzzleFlash.SetActive(true);
+                yield return new WaitForSeconds(flashDuration);
+                muzzleFlash.SetActive(false);
+
+                // Play gun shot audio
+                gunShot.Play();
+
+                reserveAmount--;
+                nextTimeToFire = Time.time + 1f / fireRate;
+
+                // Update ammo UI text components
+                magText.text = reserveAmount.ToString();
+                UpdateReserveText();
+
+                // Apply recoil effect
+                currentPosition -= transform.forward * recoilForce;
+
+                RaycastHit hit;
+                if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
+                {
+                    Debug.Log(hit.transform.name);
+                    // Apply damage or effects to the hit object here
+                }
+
+                yield return new WaitForSeconds(1f / fireRate);
+            }
+            else
+            {
+                int shotsFired = 0;
+
+                while (Input.GetButton("Fire1") && reserveAmount > 0 && shotsFired < 1)
+                {
+                    // Instantiate muzzle flash
+                    muzzleFlash.SetActive(true);
+                    yield return new WaitForSeconds(flashDuration);
+                    muzzleFlash.SetActive(false);
+
+                    // Play gun shot audio
+                    gunShot.Play();
+
+                    reserveAmount--;
+                    nextTimeToFire = Time.time + 1f / fireRate;
+                    shotsFired++;
+
+                    // Update ammo UI text components
+                    magText.text = reserveAmount.ToString();
+                    UpdateReserveText();
+
+                    // Apply recoil effect
+                    currentPosition -= transform.forward * recoilForce;
+
+                    RaycastHit hit;
+                    if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
+                    {
+                        Debug.Log(hit.transform.name);
+                        // Apply damage or effects to the hit object here
+                    }
+
+                    yield return new WaitForSeconds(1f / fireRate);
+                }
             }
 
-            yield return new WaitForSeconds(1f / fireRate);
+            isFiring = false;
         }
 
-        isFiring = false;
+        // Check if reserve ammo reached 0 and trigger reload
+        if (reserveAmount == 0 && !isReloading)
+        {
+            StartCoroutine(Reload());
+        }
     }
-}
-
-
-
 
     private void UpdateAmmoText()
     {
