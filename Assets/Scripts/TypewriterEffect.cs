@@ -10,33 +10,32 @@ public class TypewriterEffect : MonoBehaviour
     public float startDelay = 2.0f; // Time to wait before typing starts
     public float reverseDelay = 2.0f; // Time to wait before reversing the text
 
-    private string fullText;
     private string currentText = "";
 
     private void Start()
     {
-        // Get the full text from your TextMeshPro component
-        fullText = textMeshPro.text;
         textMeshPro.text = ""; // Clear the text initially
-
-        // Start the typing effect coroutine after the initial startDelay
-        StartCoroutine(StartTypingAfterDelay());
     }
 
-    private IEnumerator StartTypingAfterDelay()
+    public void StartTypingEffect(string message)
+    {
+        StartCoroutine(StartTypingAfterDelay(message));
+    }
+
+    private IEnumerator StartTypingAfterDelay(string message)
     {
         // Wait for the startDelay before starting to type
         yield return new WaitForSeconds(startDelay);
 
         // Start the typing effect coroutine
-        StartCoroutine(TypeText());
+        StartCoroutine(TypeText(message));
     }
 
-    private IEnumerator TypeText()
+    private IEnumerator TypeText(string message)
     {
-        for (int i = 0; i < fullText.Length; i++)
+        for (int i = 0; i < message.Length; i++)
         {
-            currentText += fullText[i];
+            currentText += message[i];
             textMeshPro.text = currentText;
 
             // Adjust typing speed by deltaTime for smoother animation
