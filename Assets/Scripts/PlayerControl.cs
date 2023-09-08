@@ -8,23 +8,17 @@ public class PlayerController : MonoBehaviour
     public float mouseSensitivity = 2f;
     public float jumpForce = 5f;
     public float gravity = -9.81f;
-    public float tiltSpeed = 5f;
-    public float maxTiltAngle = 20f;
 
     private CharacterController characterController;
     private Camera playerCamera;
     private float verticalRotation = 0f;
     private Vector3 playerVelocity;
     private bool isGrounded;
-    private Quaternion initialRotation;
-    private float targetTiltAngle = 0f;
-    private float currentTiltAngle = 0f;
 
     void Start()
     {
         characterController = GetComponent<CharacterController>();
         playerCamera = GetComponentInChildren<Camera>();
-        initialRotation = playerCamera.transform.localRotation;
 
         // Lock cursor to the center of the screen
         Cursor.lockState = CursorLockMode.Locked;
@@ -51,15 +45,6 @@ public class PlayerController : MonoBehaviour
 
         playerCamera.transform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
         transform.Rotate(Vector3.up * mouseX);
-
-        // Handle camera tilt
-        float tiltInput = Input.GetAxis("Horizontal");
-        targetTiltAngle = -tiltInput * maxTiltAngle;
-
-        currentTiltAngle = Mathf.Lerp(currentTiltAngle, targetTiltAngle, tiltSpeed * Time.deltaTime);
-
-        Quaternion tiltRotation = Quaternion.Euler(initialRotation.eulerAngles.x, initialRotation.eulerAngles.y, currentTiltAngle);
-        playerCamera.transform.localRotation = tiltRotation * playerCamera.transform.localRotation;
 
         // Jumping
         if (isGrounded && playerVelocity.y < 0f)
