@@ -455,8 +455,6 @@ MonoBehaviour:
   mouseSensitivity: 2
   jumpForce: 3
   gravity: -9.81
-  tiltSpeed: 3
-  maxTiltAngle: 5
 --- !u!143 &1311118744828698710
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1100,7 +1098,6 @@ GameObject:
   - component: {fileID: 455501436717549800}
   - component: {fileID: 1444022720140089474}
   - component: {fileID: 8461142144574679102}
-  - component: {fileID: 6062481958025563702}
   - component: {fileID: 8697273266944399556}
   m_Layer: 0
   m_Name: Camera
@@ -1184,20 +1181,6 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4903368135314122061}
   m_Enabled: 1
---- !u!114 &6062481958025563702
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4903368135314122061}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b51a79ca67353544db773e7120f845e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tiltSpeed: 5
-  maxTiltAngle: 10
 --- !u!114 &8697273266944399556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1333,11 +1316,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: fe8bf9aacf2844dc99ec9a9d6651df16, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.062000412
+      value: -0.062
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: fe8bf9aacf2844dc99ec9a9d6651df16, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.38125777
+      value: 0.072
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: fe8bf9aacf2844dc99ec9a9d6651df16, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1416,8 +1399,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponName: Flash Light
   firePoint: {fileID: 1469020136971194323}
-  fireRate: 1
-  maxFireDistance: 100
+  fireRate: 0
+  maxFireDistance: 0
 --- !u!114 &7936843249459498522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1539,5 +1522,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponName: a Knife
   firePoint: {fileID: 1469020136971194323}
-  fireRate: 1
-  maxFireDistance: 100
+  fireRate: 0
+  maxFireDistance: 0
