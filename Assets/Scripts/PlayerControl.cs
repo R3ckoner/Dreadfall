@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +7,7 @@ public class PlayerController : MonoBehaviour
     public float mouseSensitivity = 2f;
     public float jumpForce = 5f;
     public float gravity = -9.81f;
+    public float pickupRange = 2f;
 
     private CharacterController characterController;
     private Camera playerCamera;
@@ -15,9 +15,12 @@ public class PlayerController : MonoBehaviour
     private Vector3 playerVelocity;
     private bool isGrounded;
 
-    // Define a list to store the player's weapons
-    private List<Weapon> weapons = new List<Weapon>();
-    public int currentWeaponIndex = 0; // Index of the currently equipped weapon
+    // Define a dictionary to store the player's weapons by their names
+    private Dictionary<string, Weapon> weapons = new Dictionary<string, Weapon>();
+    private string currentWeaponName;
+
+    private PersistentData persistentData;
+    public WeaponManager weaponManager; // Declare the variable
 
     void Start()
     {
@@ -27,6 +30,20 @@ public class PlayerController : MonoBehaviour
         // Lock cursor to the center of the screen
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Access the PersistentData through its Instance
+        persistentData = PersistentData.Instance;
+
+        // Pass the WeaponManager to GetPlayerWeapons
+        persistentData.SetWeaponManager(weaponManager);
+
+        // Load the current weapon name from persistent data
+        currentWeaponName = persistentData.GetCurrentWeaponName();
+        if (!string.IsNullOrEmpty(currentWeaponName))
+        {
+            // Equip the current weapon if it exists in the inventory
+            EquipWeapon(currentWeaponName);
+        }
     }
 
     void Update()
@@ -68,56 +85,86 @@ public class PlayerController : MonoBehaviour
         // Check if the player is grounded
         isGrounded = characterController.isGrounded;
 
-        // Inventory management (e.g., switch weapons)
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetKeyDown(KeyCode.E))
         {
-            SwitchWeapon(0);
+            TryPickup();
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha2) && weapons.Count >= 2)
+
+        // Handle weapon firing
+        if (Input.GetButtonDown("Fire1") && weapons.ContainsKey(currentWeaponName))
         {
-            SwitchWeapon(1);
-        }
-        // Add more key bindings for switching to other weapons as needed
-    }
-
-    // Define a method to switch weapons
-    private void SwitchWeapon(int newIndex)
-    {
-        if (newIndex >= 0 && newIndex < weapons.Count)
-        {
-            // Disable the current weapon
-            weapons[currentWeaponIndex].gameObject.SetActive(false);
-
-            // Update the current weapon index
-            currentWeaponIndex = newIndex;
-
-            // Enable the newly equipped weapon
-            weapons[currentWeaponIndex].gameObject.SetActive(true);
+            weapons[currentWeaponName].Fire();
         }
     }
 
-    // Define a method to pick up weapons
-    public void PickUpWeapon(Weapon weapon)
+    private void TryPickup()
     {
-        // Add the weapon to the player's inventory
-        weapons.Add(weapon);
-
-        // Optionally, switch to the picked up weapon
-        SwitchWeapon(weapons.Count - 1);
-
-        Debug.Log("Picked up weapon: " + weapon.weaponName);
+        RaycastHit hit;
+        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, pickupRange))
+        {
+            WeaponPickup weaponPickup = hit.collider.GetComponent<WeaponPickup>();
+            if (weaponPickup != null)
+            {
+                string weaponName = weaponPickup.PickUp();
+                EquipWeapon(weaponName); // Call the method to equip weapons
+            }
+        }
     }
 
-    // Define a method to load the player's inventory
-    public void LoadInventory(List<Weapon> inventory)
+    public void AddToInventory(string weaponName, Weapon weapon)
     {
-        weapons.Clear(); // Clear the current inventory
-        weapons.AddRange(inventory); // Add weapons from the provided inventory
-
-        // Optionally, equip a default weapon here if needed
-        if (weapons.Count > 0)
+        if (!weapons.ContainsKey(weaponName))
         {
-            SwitchWeapon(0);
+            weapons.Add(weaponName, weapon);
+        }
+        else
+        {
+            Debug.LogWarning("Weapon already exists in the inventory: " + weaponName);
+        }
+    }
+
+    public void RemoveFromInventory(string weaponName)
+    {
+        if (weapons.ContainsKey(weaponName))
+        {
+            weapons.Remove(weaponName);
+        }
+        else
+        {
+            Debug.LogWarning("Weapon not found in the inventory: " + weaponName);
+        }
+    }
+
+    private void EquipWeapon(string weaponName)
+    {
+        if (weapons.ContainsKey(weaponName))
+        {
+            // Deactivate the currently equipped weapon (if any)
+            if (!string.IsNullOrEmpty(currentWeaponName) && weapons.ContainsKey(currentWeaponName))
+            {
+                weapons[currentWeaponName].gameObject.SetActive(false);
+            }
+
+            // Activate the newly equipped weapon
+            weapons[weaponName].gameObject.SetActive(true);
+
+            // Update the current weapon name
+            currentWeaponName = weaponName;
+
+            // Save the current weapon name to PersistentData or any other data storage
+            // You can use the PersistentData class to save this data
+            if (persistentData != null)
+            {
+                persistentData.SetCurrentWeaponName(currentWeaponName);
+            }
+            else
+            {
+                Debug.LogWarning("PersistentData script not found in the scene.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Weapon not found with name: " + weaponName);
         }
     }
 }

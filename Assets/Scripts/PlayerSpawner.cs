@@ -2,29 +2,26 @@ using UnityEngine;
 
 public class PlayerSpawner : MonoBehaviour
 {
-    public GameObject playerPrefab;
+    public GameObject playerPrefab; // Reference to the player prefab
+    public Transform spawnPoint; // Reference to the spawn point transform
 
     private void Start()
     {
         SpawnPlayer();
     }
 
-    private void SpawnPlayer()
+    public void SpawnPlayer()
     {
-        GameObject player = Instantiate(playerPrefab, transform.position, Quaternion.identity);
-
-        PlayerController playerController = player.GetComponent<PlayerController>();
-        if (playerController != null)
+        if (playerPrefab != null && spawnPoint != null)
         {
-            // Load the player's inventory from the GameManager.
-            playerController.LoadInventory(GameManager.instance.playerInventory);
-
-            // Set the current weapon index directly.
-            playerController.currentWeaponIndex = GameManager.instance.currentWeaponIndex;
+            // Instantiate the player prefab at the spawn point's position and rotation
+            GameObject player = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
+            
+            // You can add any other player initialization logic here if needed
         }
         else
         {
-            Debug.LogWarning("PlayerController component not found on the player prefab.");
+            Debug.LogError("Player prefab or spawn point is not assigned in the Inspector.");
         }
     }
 }

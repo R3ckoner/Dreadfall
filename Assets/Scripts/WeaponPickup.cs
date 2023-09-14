@@ -2,69 +2,70 @@ using UnityEngine;
 
 public class WeaponPickup : MonoBehaviour
 {
-    public Weapon weapon; // Reference to the weapon script of the pickup
-    public Camera playerCamera; // Reference to the player's camera
-    public float pickupRange = 2f; // The maximum distance at which the player can pick up the item
-    public Material outlineMaterial; // Reference to the outline material
-    private bool canPickUp = false; // Flag to check if the player can pick up the weapon
-    private Material originalMaterial; // Store the original material of the pickup object
-    private TypewriterEffect typewriterEffect; // Reference to the TypewriterEffect script
+    public GameObject weaponObject;
+    public Camera playerCamera;
+    public float pickupRange = 2f;
+    public Material outlineMaterial;
+
+    private bool canPickUp = false;
+    private Material originalMaterial;
+    private TypewriterEffect typewriterEffect;
+    private PlayerInventory playerInventory;
 
     private void Start()
     {
-        // Store the original material of the pickup object
         originalMaterial = GetComponent<Renderer>().material;
-
-        // Find the TypewriterEffect script in the scene
         typewriterEffect = FindObjectOfType<TypewriterEffect>();
-        if (typewriterEffect == null)
+        playerInventory = FindObjectOfType<PlayerInventory>();
+
+        if (playerInventory == null)
         {
-            Debug.LogError("TypewriterEffect script not found in the scene.");
+            Debug.LogError("PlayerInventory script not found in the scene.");
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // Check if the player is looking at the pickup and is within pickupRange, and presses 'E'
         if (canPickUp && Input.GetKeyDown(KeyCode.E))
         {
             PickUp();
-
-            // Queue up a pickup message
             if (typewriterEffect != null)
             {
-                typewriterEffect.StartTypingEffect("Picked up " + weapon.weaponName);
+                typewriterEffect.StartTypingEffect("Picked up " + weaponObject.name);
             }
         }
 
-        // Control the outline effect
         if (outlineMaterial != null)
         {
-            if (canPickUp)
-            {
-                GetComponent<Renderer>().material = outlineMaterial;
-            }
-            else
-            {
-                GetComponent<Renderer>().material = originalMaterial;
-            }
+            GetComponent<Renderer>().material = canPickUp ? outlineMaterial : originalMaterial;
         }
     }
 
-    public void PickUp()
+public string PickUp()
+{
+    PlayerController playerController = FindObjectOfType<PlayerController>();
+    if (playerController != null)
     {
-        WeaponManager weaponManager = FindObjectOfType<WeaponManager>();
-        if (weaponManager != null)
-        {
-            weaponManager.PickUpWeapon(weapon);
-            gameObject.SetActive(false); // Disable the pickup object renderer
-        }
+        // Enable the weapon object
+        weaponObject.SetActive(true);
+
+        // Add the weapon to the player's inventory
+        playerController.AddToInventory(weaponObject.name, weaponObject.GetComponent<Weapon>());
+
+        // Disable the pickup object renderer
+        gameObject.SetActive(false);
+
+        // Return the name of the picked-up weapon
+        return weaponObject.name;
     }
+    
+    // Return an empty string or an error message in case of failure
+    return "Failed to pick up the weapon.";
+}
+
 
     private void FixedUpdate()
     {
-        // Check if the player is looking at the pickup object using a raycast
         if (playerCamera != null)
         {
             Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
@@ -72,18 +73,11 @@ public class WeaponPickup : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit) && hit.distance <= pickupRange)
             {
-                if (hit.collider.gameObject == gameObject)
-                {
-                    canPickUp = true; // The player is looking at the pickup object and is within pickupRange
-                }
-                else
-                {
-                    canPickUp = false; // The player is not looking at the pickup object or is out of pickupRange
-                }
+                canPickUp = (hit.collider.gameObject == gameObject);
             }
             else
             {
-                canPickUp = false; // The raycast did not hit anything, or the hit object is out of pickupRange
+                canPickUp = false;
             }
         }
         else

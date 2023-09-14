@@ -10,7 +10,6 @@ public class DoorInteraction : MonoBehaviour
     public float interactionDistance = 2f; // Max distance for interaction
 
     private Material originalMaterial;
-    private bool isLookingAtDoor = false;
 
     private void Start()
     {
@@ -27,8 +26,6 @@ public class DoorInteraction : MonoBehaviour
         {
             if (hit.transform == transform)
             {
-                // The player is looking at the door
-                isLookingAtDoor = true;
                 GetComponent<Renderer>().material = outlineMaterial;
 
                 if (Input.GetKeyDown(KeyCode.E))
@@ -39,15 +36,11 @@ public class DoorInteraction : MonoBehaviour
             }
             else
             {
-                // The player is not looking at the door
-                isLookingAtDoor = false;
                 GetComponent<Renderer>().material = originalMaterial;
             }
         }
         else
         {
-            // The player is not looking at the door
-            isLookingAtDoor = false;
             GetComponent<Renderer>().material = originalMaterial;
         }
     }

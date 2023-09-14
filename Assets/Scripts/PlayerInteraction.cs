@@ -10,7 +10,7 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
-    private void TryPickUpWeapon()
+    public void TryPickUpWeapon()
     {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, transform.forward, out hit, Mathf.Infinity))
