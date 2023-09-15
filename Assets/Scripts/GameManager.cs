@@ -1,18 +1,52 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    // Define a static instance of the GameManager for easy access
-    public static GameManager instance;
+    // Singleton pattern to ensure there's only one GameManager.
+    private static GameManager instance;
 
-    // Define player data, including inventory and currentWeaponIndex
-    public PlayerData playerData = new PlayerData();
+    public static GameManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<GameManager>();
+                if (instance == null)
+                {
+                    GameObject obj = new GameObject("GameManager");
+                    instance = obj.AddComponent<GameManager>();
+                }
+            }
+            return instance;
+        }
+    }
+
+    // List to store weapons.
+    private List<Weapon> weapons = new List<Weapon>();
+
+    // Add a weapon to the GameManager.
+    public void AddWeapon(Weapon weapon)
+    {
+        weapons.Add(weapon);
+    }
+
+    // Remove a weapon from the GameManager.
+    public void RemoveWeapon(Weapon weapon)
+    {
+        weapons.Remove(weapon);
+    }
+
+    // Get a list of all weapons.
+    public List<Weapon> GetWeapons()
+    {
+        return weapons;
+    }
 
     private void Awake()
     {
-        // Ensure only one instance of the GameManager exists
+        // Ensure there's only one GameManager.
         if (instance == null)
         {
             instance = this;
@@ -22,14 +56,5 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
-
-    // Add other GameManager methods and logic as needed
-
-    public void LoadNextScene()
-    {
-        // Load the next scene
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
-        SceneManager.LoadScene(nextSceneIndex);
     }
 }

@@ -2,23 +2,41 @@ using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour
 {
+    public float pickupRange = 2f;
+    private Camera playerCamera;
+
+    private void Start()
+    {
+        playerCamera = GetComponentInChildren<Camera>();
+
+        if (playerCamera == null)
+        {
+            Debug.LogError("Player camera reference is not set in the Inspector.");
+        }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            TryPickUpWeapon();
+            TryPickup();
         }
     }
 
-    public void TryPickUpWeapon()
+    private void TryPickup()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, transform.forward, out hit, Mathf.Infinity))
+        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, pickupRange))
         {
-            WeaponPickup weaponPickup = hit.collider.GetComponent<WeaponPickup>();
-            if (weaponPickup != null)
+            GameObject weaponObject = hit.collider.gameObject; // Get the weapon object
+            if (weaponObject.CompareTag("weaponPickup")) // Check the tag
             {
-                weaponPickup.PickUp();
+                PlayerController playerController = GetComponent<PlayerController>();
+                if (playerController != null)
+                {
+                    // Call the new method to pick up the weapon
+                    playerController.PickUpWeapon(weaponObject);
+                }
             }
         }
     }

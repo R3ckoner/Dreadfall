@@ -6,7 +6,6 @@ public class DoorInteraction : MonoBehaviour
 {
     public Material outlineMaterial;
     public string sceneToLoad;
-    public Camera playerCamera; // Reference to the player camera
     public float interactionDistance = 2f; // Max distance for interaction
 
     private Material originalMaterial;
@@ -18,8 +17,17 @@ public class DoorInteraction : MonoBehaviour
 
     private void Update()
     {
-        // Cast a ray from the player camera's position forward
-        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+        // Get the main camera
+        Camera mainCamera = Camera.main;
+
+        if (mainCamera == null)
+        {
+            Debug.LogError("Main camera not found. Make sure you have a camera tagged as 'MainCamera' in your scene.");
+            return;
+        }
+
+        // Cast a ray from the main camera's position forward
+        Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
 
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, interactionDistance))

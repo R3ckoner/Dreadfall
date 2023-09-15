@@ -9,6 +9,12 @@ public class Weapon : MonoBehaviour
 
     private float fireTimer;
 
+
+    private void Start()
+    {
+        // When a weapon is created, add it to the WeaponManager.
+        WeaponManager.Instance.AddWeapon(weaponName);
+    }
     private void Update()
     {
         if (fireTimer > 0f)

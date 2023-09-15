@@ -1,72 +1,115 @@
-using System.Collections.Generic; // To use Dictionary<>
+using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class WeaponManager : MonoBehaviour
 {
-    // Define a dictionary to store weapons by their names
-    private Dictionary<string, Weapon> weapons = new Dictionary<string, Weapon>();
+    public static WeaponManager Instance;
 
-    void Start()
+    // List to store all weapon names.
+    public List<string> weaponNames = new List<string>();
+    private HashSet<string> enabledWeapons = new HashSet<string>(); // Store enabled weapon names.
+
+    private void Awake()
     {
-        // Fill the weapons dictionary with weapons found in the scene
-        Weapon[] foundWeapons = FindObjectsOfType<Weapon>();
-        foreach (Weapon weapon in foundWeapons)
+        if (Instance == null)
         {
-            // Ensure each weapon has a unique name
-            if (!weapons.ContainsKey(weapon.weaponName))
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void AddWeapon(string weaponName)
+    {
+        if (!weaponNames.Contains(weaponName))
+        {
+            weaponNames.Add(weaponName);
+            SaveWeaponData();
+        }
+    }
+
+    public List<string> GetWeapons()
+    {
+        return weaponNames;
+    }
+
+    public bool IsWeaponEnabled(string weaponName)
+    {
+        return enabledWeapons.Contains(weaponName);
+    }
+
+    public void EnableWeapon(string weaponName)
+    {
+        enabledWeapons.Add(weaponName);
+        SaveWeaponData();
+    }
+
+    public void DisableWeapon(string weaponName)
+    {
+        enabledWeapons.Remove(weaponName);
+        SaveWeaponData();
+    }
+
+    public void SaveWeaponData()
+    {
+        // Save the list of weapon names and enabled weapons as JSON strings in PlayerPrefs.
+        string weaponData = JsonUtility.ToJson(weaponNames);
+        PlayerPrefs.SetString("WeaponData", weaponData);
+
+        // Convert the HashSet to a List for serialization
+        List<string> enabledWeaponList = enabledWeapons.ToList();
+        string enabledWeaponData = JsonUtility.ToJson(enabledWeaponList);
+        PlayerPrefs.SetString("EnabledWeaponData", enabledWeaponData);
+
+        PlayerPrefs.Save();
+    }
+
+public void LoadWeaponData()
+{
+    // Load the list of weapon names from PlayerPrefs.
+    if (PlayerPrefs.HasKey("WeaponData"))
+    {
+        string weaponData = PlayerPrefs.GetString("WeaponData");
+        weaponNames = JsonUtility.FromJson<List<string>>(weaponData);
+
+        // Load the list of enabled weapon names from PlayerPrefs.
+        if (PlayerPrefs.HasKey("EnabledWeaponData"))
+        {
+            string enabledWeaponData = PlayerPrefs.GetString("EnabledWeaponData");
+            List<string> enabledWeaponList = JsonUtility.FromJson<List<string>>(enabledWeaponData);
+            enabledWeapons = new HashSet<string>(enabledWeaponList);
+
+            // Enable the weapons associated with the enabled weapon names.
+            foreach (string enabledWeaponName in enabledWeapons)
             {
-                weapons.Add(weapon.weaponName, weapon);
+                // Find the corresponding GameObject and enable it.
+                GameObject weaponObject = GameObject.Find(enabledWeaponName);
+                if (weaponObject != null)
+                {
+                    weaponObject.SetActive(true);
+                }
             }
-            else
-            {
-                Debug.LogWarning("Duplicate weapon name found: " + weapon.weaponName);
-            }
         }
     }
+}
 
-    public Dictionary<string, Weapon> GetWeapons()
-    {
-     return weapons;
-    }   
 
-    public Weapon GetWeaponByName(string weaponName)
+    public void ClearWeaponData()
     {
-        if (weapons.ContainsKey(weaponName))
-        {
-            return weapons[weaponName];
-        }
-        else
-        {
-            Debug.LogWarning("Weapon not found with name: " + weaponName);
-            return null;
-        }
+        // Clear the saved weapon data (for example, when starting a new game).
+        weaponNames.Clear();
+        enabledWeapons.Clear();
+        PlayerPrefs.DeleteKey("WeaponData");
+        PlayerPrefs.DeleteKey("EnabledWeaponData");
+        PlayerPrefs.Save();
     }
 
-
-
-    public void AddWeapon(Weapon weapon)
+    private void Start()
     {
-        if (!weapons.ContainsKey(weapon.weaponName))
-        {
-            weapons.Add(weapon.weaponName, weapon);
-        }
-        else
-        {
-            Debug.LogWarning("Weapon already exists in the weapon manager: " + weapon.weaponName);
-        }
+        LoadWeaponData();
     }
-
-    public void RemoveWeapon(Weapon weapon)
-    {
-        if (weapons.ContainsKey(weapon.weaponName))
-        {
-            weapons.Remove(weapon.weaponName);
-        }
-        else
-        {
-            Debug.LogWarning("Weapon not found in the weapon manager: " + weapon.weaponName);
-        }
-    }
-
-    // Optional: You can add more methods or functionality as needed
 }

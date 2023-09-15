@@ -1,27 +1,29 @@
-/*using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
-public class PlayerInventory : MonoBehaviour
+public class WeaponPickup : MonoBehaviour
 {
     public float pickupRange = 2f;
     public Material outlineMaterial;
-    public string playerTag = "Player"; // Set the tag of your player clones.
-    public List<GameObject> itemsInventory = new List<GameObject>(); // List to store picked up items.
 
     private bool canPickUp = false;
     private Material originalMaterial;
     private TypewriterEffect typewriterEffect;
+
+    private List<GameObject> itemsWithTag = new List<GameObject>();
 
     private void Start()
     {
         originalMaterial = GetComponent<Renderer>().material;
         typewriterEffect = FindObjectOfType<TypewriterEffect>();
 
-        // OutlineMaterial reference should be assigned manually in the Inspector.
-        if (outlineMaterial == null)
+        if (typewriterEffect == null)
         {
-            Debug.LogError("OutlineMaterial reference not assigned in the Inspector.");
+            Debug.LogError("TypewriterEffect script not found in the scene.");
         }
+
+        // Collect all objects with the "Item" tag and add them to the list.
+        CollectItemsWithTag("Item");
     }
 
     void Update()
@@ -29,10 +31,6 @@ public class PlayerInventory : MonoBehaviour
         if (canPickUp && Input.GetKeyDown(KeyCode.E))
         {
             PickUp();
-            if (typewriterEffect != null)
-            {
-                typewriterEffect.StartTypingEffect("Picked up item");
-            }
         }
 
         if (outlineMaterial != null)
@@ -43,20 +41,39 @@ public class PlayerInventory : MonoBehaviour
 
     public void PickUp()
     {
-        EnableAllItemsWithTag("Item");
-
-        // Add the item to the inventory
-        itemsInventory.Add(gameObject);
+        // Check if the pickup itself is tagged "weaponPickup"
+        if (gameObject.CompareTag("weaponPickup"))
+        {
+            // Enable all objects with the "Item" tag
+            EnableAllItemsWithTag();
+            Debug.Log("Item pickup collected and tagged items enabled.");
+        }
 
         // Disable the pickup object renderer
         gameObject.SetActive(false);
     }
 
-    private void EnableAllItemsWithTag(string tag)
+    private void CollectItemsWithTag(string tag)
     {
-        GameObject[] items = GameObject.FindGameObjectsWithTag(tag);
+        // Collect all objects with the specified tag and add them to the list.
+        GameObject[] allObjectsWithTag = GameObject.FindGameObjectsWithTag(tag);
 
-        foreach (GameObject item in items)
+        foreach (GameObject obj in allObjectsWithTag)
+        {
+            if (!itemsWithTag.Contains(obj))
+            {
+                itemsWithTag.Add(obj);
+
+                // Deactivate them initially.
+                obj.SetActive(false);
+            }
+        }
+    }
+
+    private void EnableAllItemsWithTag()
+    {
+        // Enable all objects in the list.
+        foreach (GameObject item in itemsWithTag)
         {
             item.SetActive(true);
         }
@@ -86,5 +103,3 @@ public class PlayerInventory : MonoBehaviour
         }
     }
 }
-
-*/
