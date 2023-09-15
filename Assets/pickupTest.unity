@@ -592,7 +592,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pickupRange: 2
-  outlineMaterial: {fileID: 454191482458552811, guid: 6c2067c5d6b95fa4ba9ae6a4e5f1bb21, type: 3}
+  outlineMaterial: {fileID: 2100000, guid: 33230baef4dda4cf4bd25fcb15d0d06f, type: 2}
+  tagsToEnable:
+  - Item
 --- !u!1 &2061727592
 GameObject:
   m_ObjectHideFlags: 0

@@ -32,6 +32,9 @@ public class PlayerController : MonoBehaviour
         // Initialize inventory and current weapon
         inventory.Clear();
         currentWeapon = null;
+
+        // Disable all child objects with the "Item" tag
+        DisableChildItemsWithTag(transform, "Item");
     }
 
     void Update()
@@ -126,6 +129,20 @@ public class PlayerController : MonoBehaviour
             currentWeapon = weaponObject;
 
             // ... (other code for handling weapon switching)
+        }
+    }
+
+    private void DisableChildItemsWithTag(Transform parent, string tag)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.CompareTag(tag))
+            {
+                child.gameObject.SetActive(false);
+            }
+
+            // Recursively check child's children.
+            DisableChildItemsWithTag(child, tag);
         }
     }
 

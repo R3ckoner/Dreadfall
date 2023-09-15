@@ -1263,6 +1263,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pickupRange: 2
   outlineMaterial: {fileID: 2100000, guid: 311313efa011949e98b6761d652ad13c, type: 2}
+  tagsToEnable:
+  - Item
 --- !u!1 &792127811
 GameObject:
   m_ObjectHideFlags: 0
@@ -3421,6 +3423,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pickupRange: 200
   outlineMaterial: {fileID: 2100000, guid: 311313efa011949e98b6761d652ad13c, type: 2}
+  tagsToEnable: []
 --- !u!4 &2089428376 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3681b5eaa3b102c488c45970167f50ca, type: 3}

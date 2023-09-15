@@ -10,7 +10,11 @@ public class WeaponPickup : MonoBehaviour
     private Material originalMaterial;
     private TypewriterEffect typewriterEffect;
 
+    // Specify the tags you want to enable on pickup
+    public List<string> tagsToEnable = new List<string>();
+
     private List<GameObject> itemsWithTag = new List<GameObject>();
+    private List<GameObject> disabledItems = new List<GameObject>();
 
     private void Start()
     {
@@ -22,13 +26,28 @@ public class WeaponPickup : MonoBehaviour
             Debug.LogError("TypewriterEffect script not found in the scene.");
         }
 
-        // Collect all objects with the "Item" tag and add them to the list.
-        CollectItemsWithTag("Item");
+        // Find and disable all objects tagged with "Item" at the start.
+        DisableItemsWithTags();
+
+        // Add them to the list of disabled items.
+        foreach (string tag in tagsToEnable)
+        {
+            GameObject[] allObjectsWithTag = GameObject.FindGameObjectsWithTag(tag);
+
+            foreach (GameObject obj in allObjectsWithTag)
+            {
+                if (!disabledItems.Contains(obj))
+                {
+                    disabledItems.Add(obj);
+                }
+            }
+        }
     }
 
     void Update()
     {
-        if (canPickUp && Input.GetKeyDown(KeyCode.E))
+        // Check if the player is looking at the object and presses "E"
+        if (CanPickUp() && Input.GetKeyDown(KeyCode.E))
         {
             PickUp();
         }
@@ -39,47 +58,7 @@ public class WeaponPickup : MonoBehaviour
         }
     }
 
-    public void PickUp()
-    {
-        // Check if the pickup itself is tagged "weaponPickup"
-        if (gameObject.CompareTag("weaponPickup"))
-        {
-            // Enable all objects with the "Item" tag
-            EnableAllItemsWithTag();
-            Debug.Log("Item pickup collected and tagged items enabled.");
-        }
-
-        // Disable the pickup object renderer
-        gameObject.SetActive(false);
-    }
-
-    private void CollectItemsWithTag(string tag)
-    {
-        // Collect all objects with the specified tag and add them to the list.
-        GameObject[] allObjectsWithTag = GameObject.FindGameObjectsWithTag(tag);
-
-        foreach (GameObject obj in allObjectsWithTag)
-        {
-            if (!itemsWithTag.Contains(obj))
-            {
-                itemsWithTag.Add(obj);
-
-                // Deactivate them initially.
-                obj.SetActive(false);
-            }
-        }
-    }
-
-    private void EnableAllItemsWithTag()
-    {
-        // Enable all objects in the list.
-        foreach (GameObject item in itemsWithTag)
-        {
-            item.SetActive(true);
-        }
-    }
-
-    private void FixedUpdate()
+    private bool CanPickUp()
     {
         Camera mainCamera = Camera.main; // Get the main camera
 
@@ -90,16 +69,63 @@ public class WeaponPickup : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit) && hit.distance <= pickupRange)
             {
-                canPickUp = (hit.collider.gameObject == gameObject);
-            }
-            else
-            {
-                canPickUp = false;
+                return hit.collider.gameObject == gameObject;
             }
         }
-        else
+
+        return false;
+    }
+
+    public void PickUp()
+    {
+        EnableItemsWithTags(); // Enable objects with the specified tags.
+        Debug.Log("Item pickup collected and tagged items enabled.");
+
+        // Disable the pickup object renderer
+        gameObject.SetActive(false);
+    }
+
+    private void DisableItemsWithTags()
+    {
+        foreach (string tag in tagsToEnable)
         {
-            Debug.LogError("Main camera not found in the scene.");
+            GameObject[] allObjectsWithTag = GameObject.FindGameObjectsWithTag(tag);
+
+            foreach (GameObject obj in allObjectsWithTag)
+            {
+                if (obj != gameObject && !IsChildOfCamera(obj))
+                {
+                    obj.SetActive(false); // Disable the object.
+                }
+            }
         }
+    }
+
+    private void EnableItemsWithTags()
+    {
+        foreach (GameObject item in disabledItems)
+        {
+            if (IsChildOfCamera(item))
+            {
+                item.SetActive(true); // Enable the object.
+            }
+        }
+    }
+
+    private bool IsChildOfCamera(GameObject obj)
+    {
+        Transform parent = obj.transform.parent;
+
+        while (parent != null)
+        {
+            if (parent == Camera.main.transform)
+            {
+                return true;
+            }
+
+            parent = parent.parent;
+        }
+
+        return false;
     }
 }
