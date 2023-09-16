@@ -1263,7 +1263,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 543635727554965029, guid: 77efbeb5aee134931822fb58d82e45a8, type: 3}
       propertyPath: m_TagString
-      value: Item
+      value: Weapon
       objectReference: {fileID: 0}
     - target: {fileID: 918929473451046047, guid: 77efbeb5aee134931822fb58d82e45a8, type: 3}
       propertyPath: m_LocalPosition.x
