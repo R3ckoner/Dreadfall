@@ -35,6 +35,7 @@ public class PlayerController : MonoBehaviour
 
         // Disable all child objects with the "Item" tag
         DisableChildItemsWithTag(transform, "Item");
+        DisableChildItemsWithTag(transform, "Weapon");
     }
 
     void Update()
