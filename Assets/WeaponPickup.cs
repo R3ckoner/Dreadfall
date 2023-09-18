@@ -26,8 +26,6 @@ public class WeaponPickup : MonoBehaviour
             Debug.LogError("TypewriterEffect script not found in the scene.");
         }
 
-        // Find and disable all objects tagged with "Item" at the start.
-        DisableItemsWithTags();
 
         // Add them to the list of disabled items.
         foreach (string tag in tagsToEnable)
