@@ -13,15 +13,22 @@ public class InteractableObject : MonoBehaviour
         return ItemName;
     }
 
-    void Update()
+void Update()
+{
+    if (playerInRange && Input.GetKeyDown(KeyCode.E) && SelectionManager.Instance.onTarget)
     {
-        if (playerInRange && Input.GetKeyDown(KeyCode.E) && SelectionManager.Instance.onTarget)
+        if (InventorySystem.Instance.CheckIfFull()) // Add parentheses to call the method
         {
-            Debug.Log("Item added to Inventory");
-
+            InventorySystem.Instance.AddToInventory(ItemName); // Access the property without parentheses
             Destroy(gameObject);
         }
+        else
+        {
+            Debug.Log("Inventory is full");
+        }
     }
+}
+
 
     private void OnTriggerEnter(Collider other)
     {
