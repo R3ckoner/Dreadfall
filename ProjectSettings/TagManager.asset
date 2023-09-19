@@ -7,7 +7,6 @@ TagManager:
   - Weapon
   - weaponPickup
   - Item
-  - Slot
   layers:
   - Default
   - TransparentFX
