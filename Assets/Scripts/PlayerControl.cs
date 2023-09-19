@@ -32,6 +32,10 @@ public class PlayerController : MonoBehaviour
         // Initialize inventory and current weapon
         inventory.Clear();
         currentWeapon = null;
+
+        // Disable all child objects with the "Item" tag
+        DisableChildItemsWithTag(transform, "Item");
+        DisableChildItemsWithTag(transform, "Weapon");
     }
 
     void Update()
@@ -46,6 +50,15 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             TryPickup();
+        }
+
+        // Handle weapon switching
+        for (int i = 0; i < inventory.Count; i++)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i) && i != GetCurrentWeaponIndex())
+            {
+                SwitchWeapon(i);
+            }
         }
 
         // Handle weapon firing
@@ -109,25 +122,65 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void PickUpWeapon(GameObject weaponObject)
+public void PickUpWeapon(GameObject weaponObject)
+{
+    if (!inventory.Contains(weaponObject))
     {
-        if (!inventory.Contains(weaponObject))
+        // Disable the previous weapon if there is one
+        if (currentWeapon != null)
         {
-            // Add the weapon to the player's inventory
-            inventory.Add(weaponObject);
+            currentWeapon.SetActive(false);
+        }
 
-            // Set the weapon object as a child of the player
-            weaponObject.transform.SetParent(transform);
+        // Add the weapon to the player's inventory
+        inventory.Add(weaponObject);
 
-            // Disable the weapon object initially
-            weaponObject.SetActive(false);
+        // Set the weapon object as a child of the player
+        weaponObject.transform.SetParent(transform);
 
-            // Set the current weapon to the newly picked-up weapon
-            currentWeapon = weaponObject;
+        // Enable the weapon object
+        weaponObject.SetActive(true);
 
-            // ... (other code for handling weapon switching)
+        // Set the current weapon to the newly picked-up weapon
+        currentWeapon = weaponObject;
+
+        // ... (other code for handling weapon switching)
+    }
+}
+
+
+
+    private void SwitchWeapon(int newIndex)
+    {
+        // Disable the currently enabled weapon
+        if (currentWeapon != null)
+        {
+            currentWeapon.SetActive(false);
+        }
+
+        // Enable the new weapon
+        currentWeapon = inventory[newIndex];
+        currentWeapon.SetActive(true);
+    }
+
+    private int GetCurrentWeaponIndex()
+    {
+        return inventory.IndexOf(currentWeapon);
+    }
+
+    private void DisableChildItemsWithTag(Transform parent, string tag)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.CompareTag(tag))
+            {
+                child.gameObject.SetActive(false);
+            }
+
+            // Recursively check child's children.
+            DisableChildItemsWithTag(child, tag);
         }
     }
 
-    // ... (other methods for switching weapons, firing, etc.)
+    // ... (other methods for firing, reloading, etc.)
 }
