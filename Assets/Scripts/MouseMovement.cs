@@ -30,7 +30,7 @@ public class SimpleSmoothMouseLook : MonoBehaviour
  
     void Update()
 {
-    if (InventorySystem.Instance.isOpen == false)
+    if (!InventorySystem.Instance.isOpen && !CraftingSystem.Instance.isOpen)
     {
         // Ensure the cursor is always locked when set
         if (lockCursor)
