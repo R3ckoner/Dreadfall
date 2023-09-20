@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7481445412884167262}
   - component: {fileID: 853699496531958331}
   - component: {fileID: 4607156465182836876}
-  - component: {fileID: 9174928065649369060}
+  - component: {fileID: 4002151906631592775}
   m_Layer: 0
   m_Name: Rock
   m_TagString: Untagged
@@ -28,7 +28,7 @@ RectTransform:
   m_GameObject: {fileID: 152852194081533732}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -76,7 +76,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &9174928065649369060
+--- !u!114 &4002151906631592775
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -85,7 +85,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 152852194081533732}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fd09a5914d754978afde400c58a17b9, type: 3}
+  m_Script: {fileID: 11500000, guid: f998bbd633a2f4e828a1d4544ac2321c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   canvas: {fileID: 0}
