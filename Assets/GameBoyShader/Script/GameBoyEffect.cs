@@ -1,14 +1,21 @@
 using UnityEngine;
 
+[System.Serializable]
+public class PaletteCollection
+{
+    [Tooltip("Place the palette Materials you want (by default GameBoyShader)")]
+    public Material[] palettes;
+}
+
 public class GameBoyEffect : MonoBehaviour
 {
-    [Tooltip("Place the palette Material you want (by default GameBoyShader)")]
-    public Material palette;
+    public PaletteCollection paletteCollection;
 
     [Tooltip("The bigger downSampleSize --> the more pixelated (by default = 2)")]
     public int initialDownsampleSize = 2;
 
     private int downsampleSize;
+    private int currentPaletteIndex = 0;
 
     private void Start()
     {
@@ -22,6 +29,15 @@ public class GameBoyEffect : MonoBehaviour
 
     private void CheckKeyPress()
     {
+    if (Input.GetKeyDown(KeyCode.Comma)) // Keycode for "<" key
+    {
+        SwitchPalette(-1);  // Switch to the previous material
+    }
+    else if (Input.GetKeyDown(KeyCode.Period)) // Keycode for ">" key
+    {
+        SwitchPalette(1);   // Switch to the next material
+    }
+
         if (Input.GetKeyDown(KeyCode.F1))
         {
             SetDownsampleSize(2);
@@ -34,6 +50,17 @@ public class GameBoyEffect : MonoBehaviour
         {
             SetDownsampleSize(10);
         }
+    }
+
+    private void SwitchPalette(int direction)
+    {
+        if (paletteCollection.palettes == null || paletteCollection.palettes.Length == 0)
+        {
+            Debug.LogError("You must assign palette Materials to GameBoy Effect Script");
+            return;
+        }
+
+        currentPaletteIndex = (currentPaletteIndex + direction + paletteCollection.palettes.Length) % paletteCollection.palettes.Length;
     }
 
     private void SetDownsampleSize(int newSize)
@@ -50,22 +77,22 @@ public class GameBoyEffect : MonoBehaviour
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        if (palette == null)
+        if (paletteCollection.palettes == null || paletteCollection.palettes.Length == 0)
         {
-            Debug.LogError("You must assign a palette Material to GameBoy Effect Script");
+            Debug.LogError("You must assign palette Materials to GameBoy Effect Script");
+            return;
         }
 
         int width = source.width / downsampleSize;
         int height = source.height / downsampleSize;
 
         RenderTexture temp = RenderTexture.GetTemporary(width, height, 0, source.format);
-
-        // Avoid interpolate (thanks for the tip: /xhero)
         temp.filterMode = FilterMode.Point;
 
-        // Obtain a smaller version of the source input
         Graphics.Blit(source, temp);
-        Graphics.Blit(temp, destination, palette);
+
+        Graphics.Blit(temp, destination, paletteCollection.palettes[currentPaletteIndex]);
+
         RenderTexture.ReleaseTemporary(temp);
     }
 }
