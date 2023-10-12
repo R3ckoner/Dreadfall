@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -14,44 +12,46 @@ public class PlayerMovement : MonoBehaviour
     public float groundDistance = 0.4f;
     public LayerMask groundMask;
 
-    public AudioSource footstepAudioSource; // Reference to the AudioSource component for footstep sounds
-    public AudioClip[] footstepSounds; // Array of footstep sound clips
-    public float footstepInterval = 0.5f; // Time interval between footstep sounds
+    public AudioSource footstepAudioSource;
+    public AudioClip[] footstepSounds;
+    public float footstepInterval = 0.5f;
 
     private float footstepTimer;
 
     Vector3 velocity;
-
     bool isGrounded;
 
-    // Update is called once per frame
     void Update()
     {
-        // checking if we hit the ground to reset our falling velocity, otherwise, we will fall faster the next time
+        // Check if the player is grounded
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
+        // Reset falling velocity when grounded
         if (isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
         }
 
+        // Get input for movement
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        // right is the red Axis, forward is the blue axis
+        // Use the local right and forward directions of the player
         Vector3 move = transform.right * x + transform.forward * z;
 
+        // Move the player
         controller.Move(move * speed * Time.deltaTime);
 
-        // check if the player is on the ground so he can jump
+        // Jump logic
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
-            // the equation for jumping
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
+        // Apply gravity
         velocity.y += gravity * Time.deltaTime;
 
+        // Move the player with the calculated velocity
         controller.Move(velocity * Time.deltaTime);
 
         // Footstep sound logic
