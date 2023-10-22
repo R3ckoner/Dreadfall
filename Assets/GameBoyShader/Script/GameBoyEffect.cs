@@ -10,45 +10,46 @@ public class PaletteCollection
 public class GameBoyEffect : MonoBehaviour
 {
     public PaletteCollection paletteCollection;
+    public string taggedObjectTag = "TaggedObject";
+    public float maxDistance = 10.0f; // Adjust as needed.
+    public int minDownsampleSize = 1;
+    public int maxDownsampleSize = 10; // Adjust as needed.
 
-    [Tooltip("The bigger downSampleSize --> the more pixelated (by default = 2)")]
-    public int initialDownsampleSize = 2;
-
-    private int downsampleSize;
     private int currentPaletteIndex = 0;
+    private Transform player;
+    private Camera mainCamera;
+    private int downsampleSize = 2; // Initial downsample size
 
     private void Start()
     {
-        downsampleSize = initialDownsampleSize;
+        player = Camera.main.transform; // Assuming the camera is attached to the player.
+        mainCamera = Camera.main;
     }
 
     private void Update()
     {
         CheckKeyPress();
+
+        // Check the distance to the closest tagged object.
+        GameObject closestTaggedObject = FindClosestTaggedObject();
+        if (closestTaggedObject != null)
+        {
+            float distance = Vector3.Distance(player.position, closestTaggedObject.transform.position);
+
+            // Map distance to downsample size within the specified range, but reverse it to make the resolution drop.
+            downsampleSize = Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(maxDownsampleSize, minDownsampleSize, distance / maxDistance)), minDownsampleSize, maxDownsampleSize);
+        }
     }
 
     private void CheckKeyPress()
     {
-    if (Input.GetKeyDown(KeyCode.Comma)) // Keycode for "<" key
-    {
-        SwitchPalette(-1);  // Switch to the previous material
-    }
-    else if (Input.GetKeyDown(KeyCode.Period)) // Keycode for ">" key
-    {
-        SwitchPalette(1);   // Switch to the next material
-    }
-
-        if (Input.GetKeyDown(KeyCode.F1))
+        if (Input.GetKeyDown(KeyCode.Comma)) // Keycode for "<" key
         {
-            SetDownsampleSize(2);
+            SwitchPalette(-1);  // Switch to the previous material
         }
-        else if (Input.GetKeyDown(KeyCode.F2))
+        else if (Input.GetKeyDown(KeyCode.Period)) // Keycode for ">" key
         {
-            SetDownsampleSize(5);
-        }
-        else if (Input.GetKeyDown(KeyCode.F3))
-        {
-            SetDownsampleSize(10);
+            SwitchPalette(1);   // Switch to the next material
         }
     }
 
@@ -63,16 +64,23 @@ public class GameBoyEffect : MonoBehaviour
         currentPaletteIndex = (currentPaletteIndex + direction + paletteCollection.palettes.Length) % paletteCollection.palettes.Length;
     }
 
-    private void SetDownsampleSize(int newSize)
+    private GameObject FindClosestTaggedObject()
     {
-        downsampleSize = newSize;
-    }
+        GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag(taggedObjectTag);
+        GameObject closestObject = null;
+        float closestDistance = Mathf.Infinity;
 
-    private (int, int) Downsample(RenderTexture source, int downsampleSize)
-    {
-        int width = source.width / downsampleSize;
-        int height = source.height / downsampleSize;
-        return (width, height);
+        foreach (GameObject obj in taggedObjects)
+        {
+            float distance = Vector3.Distance(player.position, obj.transform.position);
+            if (distance < closestDistance)
+            {
+                closestObject = obj;
+                closestDistance = distance;
+            }
+        }
+
+        return closestObject;
     }
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
@@ -83,8 +91,8 @@ public class GameBoyEffect : MonoBehaviour
             return;
         }
 
-        int width = source.width / downsampleSize;
-        int height = source.height / downsampleSize;
+        int width = mainCamera.pixelWidth / downsampleSize;
+        int height = mainCamera.pixelHeight / downsampleSize;
 
         RenderTexture temp = RenderTexture.GetTemporary(width, height, 0, source.format);
         temp.filterMode = FilterMode.Point;
