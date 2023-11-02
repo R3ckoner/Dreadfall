@@ -16,6 +16,7 @@ public class GameBoyEffect : MonoBehaviour
     public int maxDownsampleSize = 10; // Adjust as needed.
 
     private int currentPaletteIndex = 0;
+    private int originalPaletteIndex = 0; // Store the original palette index.
     private Transform player;
     private Camera mainCamera;
     private int downsampleSize = 2; // Initial downsample size
@@ -24,12 +25,11 @@ public class GameBoyEffect : MonoBehaviour
     {
         player = Camera.main.transform; // Assuming the camera is attached to the player.
         mainCamera = Camera.main;
+        originalPaletteIndex = currentPaletteIndex; // Store the original palette index.
     }
 
     private void Update()
     {
-        CheckKeyPress();
-
         // Check the distance to the closest tagged object.
         GameObject closestTaggedObject = FindClosestTaggedObject();
         if (closestTaggedObject != null)
@@ -38,30 +38,27 @@ public class GameBoyEffect : MonoBehaviour
 
             // Map distance to downsample size within the specified range, but reverse it to make the resolution drop.
             downsampleSize = Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(maxDownsampleSize, minDownsampleSize, distance / maxDistance)), minDownsampleSize, maxDownsampleSize);
+
+            // Update the palette based on proximity.
+            UpdatePalette(distance);
+        }
+        else
+        {
+            // Player is not in proximity of any tagged object, revert to the original palette.
+            currentPaletteIndex = originalPaletteIndex;
         }
     }
 
-    private void CheckKeyPress()
+    private void UpdatePalette(float distance)
     {
-        if (Input.GetKeyDown(KeyCode.Comma)) // Keycode for "<" key
+        for (int i = 0; i < paletteCollection.palettes.Length; i++)
         {
-            SwitchPalette(-1);  // Switch to the previous material
+            if (distance <= i * maxDistance / paletteCollection.palettes.Length)
+            {
+                currentPaletteIndex = i;
+                break;
+            }
         }
-        else if (Input.GetKeyDown(KeyCode.Period)) // Keycode for ">" key
-        {
-            SwitchPalette(1);   // Switch to the next material
-        }
-    }
-
-    private void SwitchPalette(int direction)
-    {
-        if (paletteCollection.palettes == null || paletteCollection.palettes.Length == 0)
-        {
-            Debug.LogError("You must assign palette Materials to GameBoy Effect Script");
-            return;
-        }
-
-        currentPaletteIndex = (currentPaletteIndex + direction + paletteCollection.palettes.Length) % paletteCollection.palettes.Length;
     }
 
     private GameObject FindClosestTaggedObject()
