@@ -57,6 +57,9 @@ public class GameBoyEffect : MonoBehaviour
             {
                 currentPaletteIndex = i;
                 break;
+            } else //write a function to turn the palette back to the original material
+            {
+                currentPaletteIndex = originalPaletteIndex;
             }
         }
     }

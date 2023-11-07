@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -6,6 +5,7 @@ public class EnemyAI : MonoBehaviour
 {
     private Transform player;
     private NavMeshAgent navMeshAgent;
+    public int damageAmount = 10; // Adjust the damage amount as needed.
 
     private void Start()
     {
@@ -26,4 +26,19 @@ public class EnemyAI : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(lookAtDirection);
         }
     }
+
+   /* private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            // Check if the collided object has the "Player" tag
+            PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                // Damage the player's health
+                playerHealth.TakeDamage(damageAmount);
+            }
+        }
+    } */
 }
+
