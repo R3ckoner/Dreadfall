@@ -4,36 +4,50 @@ using TMPro;
 
 public class Gun : MonoBehaviour
 {
+    [Header("Gun Properties")]
     public float damage = 10f;
     public float range = 100f;
     public float fireRate = 15f;
+    public float recoilForce = 0.1f;
+    public float recoilRecoverySpeed = 10f;
+    public float timeToFireDelay = 0.2f;
 
+    [Header("Ammo UI")]
     public TextMeshProUGUI magText;
     public TextMeshProUGUI reserveText;
+
+    [Header("Ammo Configuration")]
     public int magAmmo;
     private int reserveAmount;
     public int totalAmmo = 50;
+
+    [Header("Reload Configuration")]
     public float reloadTime = 1f;
+    public float reloadDelay = 0.5f;
+    public float reloadTiltAmount = -10f;
+    public float reloadTiltSpeed = 30f;
 
-    private bool isReloading = false;
-    private bool isFiring = false;
-    public bool isFullAuto = false; // Toggle for full-auto mode
-    public bool showReserveText = true; // Toggle for reserve text visibility
+    [Header("Fire Configuration")]
+    public bool isFullAuto = false;
+    public bool showReserveText = true;
+    public bool isShotgun = false;
+    private int shotsFired = 0;
 
+    [Header("Camera and Sound")]
     public Camera fpsCam;
     public AudioSource gunShot;
     public AudioSource reloadNoise;
-    public GameObject muzzleFlash;
+
+    [Header("Visual Effects")]
+    public GameObject muzzleFlashPrefab;
     public Transform barrelEnd;
     public float flashDuration = 0.1f;
 
-    public float recoilForce = 0.1f;
-    public float recoilRecoverySpeed = 10f; // Adjust this value for smoother recovery
-
     private Vector3 initialPosition;
-    private Vector3 currentPosition; // Track the current position during recoil recovery
-
+    private Vector3 currentPosition;
     private float nextTimeToFire = 0f;
+    private bool isReloading = false;
+    private bool isFiring = false;
 
     private void Start()
     {
@@ -59,20 +73,11 @@ public class Gun : MonoBehaviour
             return;
         }
 
-        if (isFullAuto)
+        if ((isFullAuto && Input.GetButton("Fire1") && Time.time >= nextTimeToFire) ||
+            (!isFullAuto && Input.GetButtonDown("Fire1") && Time.time >= nextTimeToFire))
         {
-            if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
-            {
-                StartCoroutine(Shoot());
-                nextTimeToFire = Time.time + 1f / fireRate;
-            }
-        }
-        else
-        {
-            if (Input.GetButtonDown("Fire1") && Time.time >= nextTimeToFire)
-            {
-                StartCoroutine(Shoot());
-            }
+            StartCoroutine(Shoot());
+            nextTimeToFire = Time.time + 1f / fireRate;
         }
 
         // Smoothly recover from recoil
@@ -84,34 +89,61 @@ public class Gun : MonoBehaviour
     {
         if (totalAmmo >= magAmmo)
         {
-            isReloading = true;
-            reloadNoise.Play();
-
-            yield return new WaitForSeconds(reloadTime);
-
-            int bulletsToReload = magAmmo - reserveAmount;
-            reserveAmount += bulletsToReload;
-            totalAmmo -= bulletsToReload;
-
-            isReloading = false;
-
-            UpdateAmmoText();
+            yield return PerformReload(magAmmo - reserveAmount);
         }
         else if (totalAmmo > 0)
         {
-            isReloading = true;
-            reloadNoise.Play();
-
-            yield return new WaitForSeconds(reloadTime);
-
-            int bulletsToReload = totalAmmo;
-            reserveAmount += bulletsToReload;
-            totalAmmo -= bulletsToReload;
-
-            isReloading = false;
-
-            UpdateAmmoText();
+            yield return PerformReload(totalAmmo);
         }
+    }
+
+    private IEnumerator PerformReload(int bulletsToReload)
+    {
+        isReloading = true;
+        PlayReloadAnimation();
+
+        yield return new WaitForSeconds(reloadTime);
+
+        reserveAmount += bulletsToReload;
+        totalAmmo -= bulletsToReload;
+
+        yield return new WaitForSeconds(reloadDelay);
+
+        isReloading = false;
+        UpdateAmmoText();
+    }
+
+    private IEnumerator PlayReloadAnimation()
+    {
+        float tiltDuration = 0.5f;
+        float tiltSpeed = reloadTiltSpeed;
+
+        Vector3 initialRotation = transform.localEulerAngles;
+        Vector3 targetRotation = initialRotation + new Vector3(reloadTiltAmount, 0f, 0f);
+
+        float elapsed = 0f;
+        while (elapsed < tiltDuration)
+        {
+            transform.localEulerAngles = Vector3.Lerp(initialRotation, targetRotation, elapsed / tiltDuration);
+            elapsed += Time.deltaTime * tiltSpeed;
+            yield return null;
+        }
+
+        transform.localEulerAngles = targetRotation;
+
+        // Gradually tilt back up during the reload time
+        float tiltBackDuration = reloadTime - tiltDuration;
+        float tiltBackSpeed = reloadTiltSpeed;
+
+        elapsed = 0f;
+        while (elapsed < tiltBackDuration)
+        {
+            transform.localEulerAngles = Vector3.Lerp(targetRotation, initialRotation, elapsed / tiltBackDuration);
+            elapsed += Time.deltaTime * tiltBackSpeed;
+            yield return null;
+        }
+
+        transform.localEulerAngles = initialRotation;
     }
 
     private IEnumerator Shoot()
@@ -120,91 +152,54 @@ public class Gun : MonoBehaviour
         {
             isFiring = true;
 
-            if (!isFullAuto)
+            PlayMuzzleFlash();
+
+            gunShot.Play();
+            reserveAmount--;
+            UpdateAmmoText();
+            currentPosition -= transform.forward * recoilForce;
+
+            RaycastHit hit;
+            if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
             {
-                // Single shot in semi-auto mode
-                // Instantiate muzzle flash
-                muzzleFlash.SetActive(true);
-                yield return new WaitForSeconds(flashDuration);
-                muzzleFlash.SetActive(false);
-
-                // Play gun shot audio
-                gunShot.Play();
-
-                reserveAmount--;
-                nextTimeToFire = Time.time + 1f / fireRate;
-
-                // Update ammo UI text components
-                magText.text = reserveAmount.ToString();
-                UpdateReserveText();
-
-                // Apply recoil effect
-                currentPosition -= transform.forward * recoilForce;
-
-                RaycastHit hit;
-                if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
+                // Handle hit
+                EnemyAI enemy = hit.transform.GetComponent<EnemyAI>();
+                if (enemy != null)
                 {
-                    Debug.Log(hit.transform.name);
-                    // Apply damage or effects to the hit object here
-                }
-
-                yield return new WaitForSeconds(1f / fireRate);
-            }
-            else
-            {
-                int shotsFired = 0;
-
-                while (Input.GetButton("Fire1") && reserveAmount > 0 && shotsFired < 1)
-                {
-                    // Instantiate muzzle flash
-                    muzzleFlash.SetActive(true);
-                    yield return new WaitForSeconds(flashDuration);
-                    muzzleFlash.SetActive(false);
-
-                    // Play gun shot audio
-                    gunShot.Play();
-
-                    reserveAmount--;
-                    nextTimeToFire = Time.time + 1f / fireRate;
-                    shotsFired++;
-
-                    // Update ammo UI text components
-                    magText.text = reserveAmount.ToString();
-                    UpdateReserveText();
-
-                    // Apply recoil effect
-                    currentPosition -= transform.forward * recoilForce;
-
-                    RaycastHit hit;
-                    if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
-                    {
-                        Debug.Log(hit.transform.name);
-                        // Apply damage or effects to the hit object here
-                    }
-
-                    yield return new WaitForSeconds(1f / fireRate);
+                    enemy.TakeDamage(damage);
                 }
             }
 
+            yield return new WaitForSeconds(1f / fireRate);
+
+            currentPosition = Vector3.Lerp(currentPosition, initialPosition, Time.deltaTime * recoilRecoverySpeed);
+            transform.localPosition = currentPosition;
+
+            yield return new WaitForSeconds(timeToFireDelay);
             isFiring = false;
         }
+    }
 
-        // Check if reserve ammo reached 0 and trigger reload
-        if (reserveAmount == 0 && !isReloading)
-        {
-            StartCoroutine(Reload());
-        }
+    private void PlayMuzzleFlash()
+    {
+        // Activate the muzzle flash GameObject
+        muzzleFlashPrefab.SetActive(true);
+
+        // Deactivate the muzzle flash after the specified duration
+        StartCoroutine(DeactivateMuzzleFlash());
+    }
+
+    private IEnumerator DeactivateMuzzleFlash()
+    {
+        yield return new WaitForSeconds(flashDuration);
+
+        // Deactivate the muzzle flash GameObject
+        muzzleFlashPrefab.SetActive(false);
     }
 
     private void UpdateAmmoText()
     {
         magText.text = reserveAmount.ToString();
-        UpdateReserveText();
-    }
-
-    private void UpdateReserveText()
-    {
-        reserveText.gameObject.SetActive(showReserveText);
         reserveText.text = totalAmmo.ToString();
     }
 }

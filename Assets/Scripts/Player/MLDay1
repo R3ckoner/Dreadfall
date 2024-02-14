@@ -1,0 +1,54 @@
+import random
+
+def start_game():
+    print("Welcome to the Text Adventure Game!")
+    print("You find yourself in a dark room. There are two doors in front of you.")
+    print("Choose door 1 or door 2.")
+
+    door_choice = input("> ")
+
+    if door_choice == "1":
+        room_1()
+    elif door_choice == "2":
+        room_2()
+    else:
+        print("Invalid choice. Please try again.")
+        start_game()
+
+def room_1():
+    print("You enter room 1. There is a key on the table.")
+    print("What do you do?")
+    print("1. Take the key")
+    print("2. Leave it")
+
+    choice = input("> ")
+
+    if choice == "1":
+        print("You take the key and proceed to the next room.")
+        room_2()
+    elif choice == "2":
+        print("You leave the key and proceed to the next room.")
+        room_2()
+    else:
+        print("Invalid choice. Please try again.")
+        room_1()
+
+def room_2():
+    print("You enter room 2. There is a locked door.")
+    print("What do you do?")
+    print("1. Use the key")
+    print("2. Try to break the door")
+
+    choice = input("> ")
+
+    if choice == "1":
+        print("You use the key to unlock the door.")
+        print("Congratulations! You escaped the room.")
+    elif choice == "2":
+        print("You try to break the door, but it's too strong.")
+        print("Game over.")
+    else:
+        print("Invalid choice. Please try again.")
+        room_2()
+
+start_game()

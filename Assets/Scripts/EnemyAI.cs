@@ -1,4 +1,4 @@
-using UnityEngine;
+/* using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
@@ -40,5 +40,5 @@ public class EnemyAI : MonoBehaviour
             }
         }
     } */
-}
+//}
 

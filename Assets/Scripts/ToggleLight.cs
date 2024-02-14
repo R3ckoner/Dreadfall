@@ -17,7 +17,8 @@ public class ToggleLight : MonoBehaviour
     private void Update()
     {
         // Check for mouse click (left mouse button)
-        if (Input.GetMouseButtonDown(0))
+        //change the code below to use f instead of mouse click {
+        if (Input.GetKeyDown(KeyCode.F))
         {
             // Toggle the light state
             isLightOn = !isLightOn;
@@ -25,5 +26,5 @@ public class ToggleLight : MonoBehaviour
             // Enable or disable the spotlight accordingly
             spotlight.enabled = isLightOn;
         }
-    }
+}
 }

@@ -44,8 +44,9 @@ public class GameBoyEffect : MonoBehaviour
         }
         else
         {
-            // Player is not in proximity of any tagged object, revert to the original palette.
-            currentPaletteIndex = originalPaletteIndex;
+            // Player is not in proximity of any tagged object, reset to the original values.
+            downsampleSize = 2; // Reset downsample size to original value.
+            RestoreOriginalPalette();
         }
     }
 
@@ -56,12 +57,16 @@ public class GameBoyEffect : MonoBehaviour
             if (distance <= i * maxDistance / paletteCollection.palettes.Length)
             {
                 currentPaletteIndex = i;
-                break;
-            } else //write a function to turn the palette back to the original material
-            {
-                currentPaletteIndex = originalPaletteIndex;
+                return;
             }
         }
+
+        // If no condition met, keep the current palette index
+    }
+
+    private void RestoreOriginalPalette()
+    {
+        currentPaletteIndex = originalPaletteIndex;
     }
 
     private GameObject FindClosestTaggedObject()

@@ -1,33 +1,42 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraTilt : MonoBehaviour
+public class FPTilt : MonoBehaviour
 {
+    public float tiltAmount = 5f;
     public float tiltSpeed = 5f;
-    public float maxTiltAngle = 20f;
+    public KeyCode leftButton = KeyCode.A;
+    public KeyCode rightButton = KeyCode.D;
 
-    private float tiltAngle = 0f;
     private Quaternion initialRotation;
 
-    private void Start()
+    void Start()
     {
-        initialRotation = transform.localRotation;
+        initialRotation = transform.rotation;
     }
 
-    private void Update()
+    void Update()
     {
-        // Handle camera tilt
-        float tiltInput = Input.GetAxis("Horizontal");
-        tiltAngle = Mathf.Lerp(tiltAngle, tiltInput * maxTiltAngle, tiltSpeed * Time.deltaTime);
+        if (Input.GetKey(leftButton))
+        {
+            TiltCamera(tiltAmount);
+        }
+        else if (Input.GetKey(rightButton))
+        {
+            TiltCamera(-tiltAmount);
+        }
+        else
+        {
+            // Smoothly return to the initial rotation when no keys are pressed
+            transform.rotation = Quaternion.Slerp(transform.rotation, initialRotation, Time.deltaTime * tiltSpeed);
+        }
+    }
 
-        Quaternion tiltRotation = Quaternion.Euler(initialRotation.eulerAngles.x, initialRotation.eulerAngles.y, tiltAngle);
-        transform.localRotation = tiltRotation;
+    void TiltCamera(float amount)
+    {
+        // Calculate the target rotation based on the tilt amount
+        Quaternion targetRotation = Quaternion.Euler(initialRotation.eulerAngles.x, initialRotation.eulerAngles.y, amount);
 
-        // Handle camera rotation
-        float mouseX = Input.GetAxis("Mouse X");
-
-        // Apply rotation around the Y-axis (left and right)
-        transform.Rotate(Vector3.up * mouseX);
+        // Smoothly interpolate between the current rotation and the target rotation
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * tiltSpeed);
     }
 }
