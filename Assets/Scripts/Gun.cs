@@ -26,6 +26,7 @@ public class Gun : MonoBehaviour
     public float reloadDelay = 0.5f;
     public float reloadTiltAmount = -10f;
     public float reloadTiltSpeed = 30f;
+    public float reloadIntensity = 1.0f;
 
     [Header("Fire Configuration")]
     public bool isFullAuto = false;
@@ -43,17 +44,23 @@ public class Gun : MonoBehaviour
     public Transform barrelEnd;
     public float flashDuration = 0.1f;
 
+    [Header("Camera Shake")]
+    public float shakeDuration = 0.1f;
+    public float shakeMagnitude = 0.2f;
+
     private Vector3 initialPosition;
     private Vector3 currentPosition;
     private float nextTimeToFire = 0f;
     private bool isReloading = false;
     private bool isFiring = false;
+    private Vector3 originalCameraPosition; // Store original camera position for shake
 
     private void Start()
     {
         reserveAmount = magAmmo;
         initialPosition = transform.localPosition;
         currentPosition = initialPosition;
+        originalCameraPosition = fpsCam.transform.localPosition; // Initialize original camera position
         UpdateAmmoText();
     }
 
@@ -80,7 +87,6 @@ public class Gun : MonoBehaviour
             nextTimeToFire = Time.time + 1f / fireRate;
         }
 
-        // Smoothly recover from recoil
         currentPosition = Vector3.Lerp(currentPosition, initialPosition, Time.deltaTime * recoilRecoverySpeed);
         transform.localPosition = currentPosition;
     }
@@ -115,11 +121,11 @@ public class Gun : MonoBehaviour
 
     private IEnumerator PlayReloadAnimation()
     {
-        float tiltDuration = 0.5f;
+        float tiltDuration = reloadTime * 0.5f;
         float tiltSpeed = reloadTiltSpeed;
 
         Vector3 initialRotation = transform.localEulerAngles;
-        Vector3 targetRotation = initialRotation + new Vector3(reloadTiltAmount, 0f, 0f);
+        Vector3 targetRotation = initialRotation + new Vector3(reloadTiltAmount * reloadIntensity, 0f, 0f);
 
         float elapsed = 0f;
         while (elapsed < tiltDuration)
@@ -131,6 +137,10 @@ public class Gun : MonoBehaviour
 
         transform.localEulerAngles = targetRotation;
 
+        // Skip the wait if already completed reloading
+        if (!isReloading)
+            yield break;
+
         // Gradually tilt back up during the reload time
         float tiltBackDuration = reloadTime - tiltDuration;
         float tiltBackSpeed = reloadTiltSpeed;
@@ -140,6 +150,11 @@ public class Gun : MonoBehaviour
         {
             transform.localEulerAngles = Vector3.Lerp(targetRotation, initialRotation, elapsed / tiltBackDuration);
             elapsed += Time.deltaTime * tiltBackSpeed;
+
+            // Ensure the coroutine exits if reloading is canceled
+            if (!isReloading)
+                break;
+
             yield return null;
         }
 
@@ -152,7 +167,9 @@ public class Gun : MonoBehaviour
         {
             isFiring = true;
 
+            // Play muzzle flash and camera shake
             PlayMuzzleFlash();
+            StartCoroutine(CameraShake());
 
             gunShot.Play();
             reserveAmount--;
@@ -163,11 +180,6 @@ public class Gun : MonoBehaviour
             if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
             {
                 // Handle hit
-                EnemyAI enemy = hit.transform.GetComponent<EnemyAI>();
-                if (enemy != null)
-                {
-                    enemy.TakeDamage(damage);
-                }
             }
 
             yield return new WaitForSeconds(1f / fireRate);
@@ -185,7 +197,7 @@ public class Gun : MonoBehaviour
         // Activate the muzzle flash GameObject
         muzzleFlashPrefab.SetActive(true);
 
-        // Deactivate the muzzle flash after the specified duration
+        // Start the coroutine to deactivate the muzzle flash after the specified duration
         StartCoroutine(DeactivateMuzzleFlash());
     }
 
@@ -195,6 +207,27 @@ public class Gun : MonoBehaviour
 
         // Deactivate the muzzle flash GameObject
         muzzleFlashPrefab.SetActive(false);
+    }
+
+    private IEnumerator CameraShake()
+    {
+        float elapsed = 0f;
+
+        while (elapsed < shakeDuration)
+        {
+            // Generate random offset within a sphere
+            Vector3 randomOffset = Random.insideUnitSphere * shakeMagnitude;
+
+            // Apply the offset to the camera position
+            fpsCam.transform.localPosition = originalCameraPosition + randomOffset;
+
+            elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+
+        // Reset the camera position
+        fpsCam.transform.localPosition = originalCameraPosition;
     }
 
     private void UpdateAmmoText()

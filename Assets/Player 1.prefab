@@ -20,7 +20,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8991764619023015431
 Transform:
   m_ObjectHideFlags: 0
@@ -235,7 +235,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2610969802165079898
 Transform:
   m_ObjectHideFlags: 0
@@ -532,8 +532,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b51a79ca67353544db773e7120f845e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tiltAmount: 5
   tiltSpeed: 100
-  maxTilt: 30
+  leftButton: 97
+  rightButton: 100
 --- !u!1 &8657939459439959211
 GameObject:
   m_ObjectHideFlags: 0
@@ -549,7 +551,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7213596874566797281
 Transform:
   m_ObjectHideFlags: 0

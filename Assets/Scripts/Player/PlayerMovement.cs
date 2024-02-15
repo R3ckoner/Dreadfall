@@ -3,59 +3,52 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public CharacterController controller;
-
     public float speed = 12f;
-    public float gravity = -9.81f * 2;
+    public float gravity = -9.81f;
     public float jumpHeight = 3f;
-
-    public Transform groundCheck;
-    public float groundDistance = 0.4f;
-    public LayerMask groundMask;
 
     public AudioSource footstepAudioSource;
     public AudioClip[] footstepSounds;
     public float footstepInterval = 0.5f;
 
     private float footstepTimer;
-
-    Vector3 velocity;
-    bool isGrounded;
+    private Vector3 velocity;
+    private bool isGrounded;
 
     void Update()
     {
-        // Check if the player is grounded
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        HandleMovement();
+        HandleJump();
+        ApplyGravity();
+        HandleFootsteps();
+    }
 
-        // Reset falling velocity when grounded
-        if (isGrounded && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-
-        // Get input for movement
+    void HandleMovement()
+    {
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
-
-        // Use the local right and forward directions of the player
         Vector3 move = transform.right * x + transform.forward * z;
-
-        // Move the player
         controller.Move(move * speed * Time.deltaTime);
+    }
 
-        // Jump logic
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
+void HandleJump()
+{
+    if (Input.GetButtonDown("Jump") && controller.isGrounded)
+    {
+        velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+    }
+}
 
-        // Apply gravity
+
+    void ApplyGravity()
+    {
         velocity.y += gravity * Time.deltaTime;
-
-        // Move the player with the calculated velocity
         controller.Move(velocity * Time.deltaTime);
+    }
 
-        // Footstep sound logic
-        if (isGrounded && (x != 0f || z != 0f))
+    void HandleFootsteps()
+    {
+        if (isGrounded && (Input.GetAxis("Horizontal") != 0f || Input.GetAxis("Vertical") != 0f))
         {
             footstepTimer += Time.deltaTime;
             if (footstepTimer >= footstepInterval)

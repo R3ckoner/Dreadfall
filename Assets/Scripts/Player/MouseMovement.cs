@@ -7,7 +7,6 @@ public class SmoothMouseLook : MonoBehaviour
 
     void Start()
     {
-        // Lock the cursor at the start of the game
         Cursor.lockState = CursorLockMode.Locked;
     }
 
@@ -16,19 +15,15 @@ public class SmoothMouseLook : MonoBehaviour
         HandleMouseLook();
     }
 
-void HandleMouseLook()
-{
-    rotation.y += Input.GetAxis("Mouse X");
-    rotation.x += -Input.GetAxis("Mouse Y");
-    
-    // Clamp the vertical rotation between -45 and 45 degrees
-    rotation.x = Mathf.Clamp(rotation.x, -45f, 45f);
-    
-    // Apply the rotation to the GameObject
-    transform.eulerAngles = (Vector2)rotation * speed;
+    void HandleMouseLook()
+    {
+        rotation.y += Input.GetAxis("Mouse X");
+        rotation.x += -Input.GetAxis("Mouse Y");
 
-    // Lock the cursor during gameplay
-    Cursor.lockState = CursorLockMode.Locked;
-}
+        rotation.x = Mathf.Clamp(rotation.x, -45f, 45f);
 
+        transform.eulerAngles = (Vector2)rotation * speed;
+
+        Cursor.lockState = CursorLockMode.Locked;
+    }
 }
