@@ -1,42 +1,33 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class FPTilt : MonoBehaviour
+public class CameraTilt : MonoBehaviour
 {
-    public float tiltAmount = 5f;
     public float tiltSpeed = 5f;
-    public KeyCode leftButton = KeyCode.A;
-    public KeyCode rightButton = KeyCode.D;
+    public float maxTiltAngle = 20f;
 
+    private float tiltAngle = 0f;
     private Quaternion initialRotation;
 
-    void Start()
+    private void Start()
     {
-        initialRotation = transform.rotation;
+        initialRotation = transform.localRotation;
     }
 
-    void Update()
+    private void Update()
     {
-        if (Input.GetKey(leftButton))
-        {
-            TiltCamera(tiltAmount);
-        }
-        else if (Input.GetKey(rightButton))
-        {
-            TiltCamera(-tiltAmount);
-        }
-        else
-        {
-            // Smoothly return to the initial rotation when no keys are pressed
-            transform.rotation = Quaternion.Slerp(transform.rotation, initialRotation, Time.deltaTime * tiltSpeed);
-        }
-    }
+        // Handle camera tilt
+        float tiltInput = Input.GetAxis("Horizontal");
+        tiltAngle = Mathf.Lerp(tiltAngle, -tiltInput * maxTiltAngle, tiltSpeed * Time.deltaTime);
 
-    void TiltCamera(float amount)
-    {
-        // Calculate the target rotation based on the tilt amount
-        Quaternion targetRotation = Quaternion.Euler(initialRotation.eulerAngles.x, initialRotation.eulerAngles.y, amount);
+        Quaternion tiltRotation = Quaternion.Euler(initialRotation.eulerAngles.x, initialRotation.eulerAngles.y, tiltAngle);
+        transform.localRotation = tiltRotation;
 
-        // Smoothly interpolate between the current rotation and the target rotation
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * tiltSpeed);
+        // Handle camera rotation
+        float mouseX = Input.GetAxis("Mouse X");
+
+        // Apply rotation around the Y-axis (left and right)
+        transform.Rotate(Vector3.up * mouseX);
     }
 }
