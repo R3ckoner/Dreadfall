@@ -13,7 +13,6 @@ public class PlayerMovement : MonoBehaviour
 
     private float footstepTimer;
     private Vector3 velocity;
-    private bool isGrounded;
 
     void Update()
     {
@@ -31,14 +30,13 @@ public class PlayerMovement : MonoBehaviour
         controller.Move(move * speed * Time.deltaTime);
     }
 
-void HandleJump()
-{
-    if (Input.GetButtonDown("Jump") && controller.isGrounded)
+    void HandleJump()
     {
-        velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        if (Input.GetButtonDown("Jump") && controller.isGrounded)
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
     }
-}
-
 
     void ApplyGravity()
     {
@@ -48,7 +46,7 @@ void HandleJump()
 
     void HandleFootsteps()
     {
-        if (isGrounded && (Input.GetAxis("Horizontal") != 0f || Input.GetAxis("Vertical") != 0f))
+        if (IsMoving() && IsGrounded())
         {
             footstepTimer += Time.deltaTime;
             if (footstepTimer >= footstepInterval)
@@ -57,6 +55,16 @@ void HandleJump()
                 footstepTimer = 0f;
             }
         }
+    }
+
+    bool IsMoving()
+    {
+        return Input.GetAxis("Horizontal") != 0f || Input.GetAxis("Vertical") != 0f;
+    }
+
+    bool IsGrounded()
+    {
+        return controller.isGrounded;
     }
 
     void PlayFootstepSound()

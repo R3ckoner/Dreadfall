@@ -3,6 +3,9 @@ using UnityEngine;
 public class PlayerInteraction : MonoBehaviour
 {
     public float pickupRange = 2f;
+    public string pickupTag = "weaponPickup"; // Tag for the pickup objects
+    public string weaponTag = "weapon"; // Tag for the weapon
+
     private Camera playerCamera;
 
     private void Start()
@@ -28,15 +31,21 @@ public class PlayerInteraction : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, pickupRange))
         {
-            GameObject weaponObject = hit.collider.gameObject; // Get the weapon object
-            if (weaponObject.CompareTag("weaponPickup")) // Check the tag
+            GameObject pickupObject = hit.collider.gameObject; // Get the pickup object
+            if (pickupObject.CompareTag(pickupTag)) // Check the tag
             {
-                PlayerController playerController = GetComponent<PlayerController>();
-                if (playerController != null)
+                // Enable the weapon which is a child of the camera
+                foreach (Transform child in playerCamera.transform)
                 {
-                    // Call the new method to pick up the weapon
-                    playerController.PickUpWeapon(weaponObject);
+                    if (child.gameObject.CompareTag(weaponTag))
+                    {
+                        child.gameObject.SetActive(true);
+                        break;
+                    }
                 }
+
+                // Make the pickup object disappear
+                Destroy(pickupObject);
             }
         }
     }

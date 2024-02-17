@@ -9,6 +9,8 @@ TagManager:
   - Item
   - Slot
   - Fear
+  - Shotgun
+  - Pistol
   layers:
   - Default
   - TransparentFX

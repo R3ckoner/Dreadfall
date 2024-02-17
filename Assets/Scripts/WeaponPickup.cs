@@ -10,11 +10,10 @@ public class WeaponPickup : MonoBehaviour
     private Material originalMaterial;
     private TypewriterEffect typewriterEffect;
 
-    // Specify the tags you want to enable on pickup
-    public List<string> tagsToEnable = new List<string>();
+    // Specify the GameObjects you want to enable on pickup
+    public List<GameObject> objectsToEnable = new List<GameObject>();
 
-    private List<GameObject> itemsWithTag = new List<GameObject>();
-    private List<GameObject> disabledItems = new List<GameObject>();
+    private List<GameObject> disabledObjects = new List<GameObject>();
 
     private void Start()
     {
@@ -26,18 +25,13 @@ public class WeaponPickup : MonoBehaviour
             Debug.LogError("TypewriterEffect script not found in the scene.");
         }
 
-
-        // Add them to the list of disabled items.
-        foreach (string tag in tagsToEnable)
+        // Add the associated disabled objects to the list
+        foreach (GameObject obj in objectsToEnable)
         {
-            GameObject[] allObjectsWithTag = GameObject.FindGameObjectsWithTag(tag);
-
-            foreach (GameObject obj in allObjectsWithTag)
+            if (!disabledObjects.Contains(obj))
             {
-                if (!disabledItems.Contains(obj))
-                {
-                    disabledItems.Add(obj);
-                }
+                disabledObjects.Add(obj);
+                obj.SetActive(false); // Disable the associated objects initially
             }
         }
     }
@@ -76,54 +70,23 @@ public class WeaponPickup : MonoBehaviour
 
     public void PickUp()
     {
-        EnableItemsWithTags(); // Enable objects with the specified tags.
-        Debug.Log("Item pickup collected and tagged items enabled.");
+        EnableObjectsOnPickup(); // Enable associated objects on pickup
+        Debug.Log("Objects pickup collected and associated objects enabled.");
+
+        // Optionally play a pickup sound, effects, etc.
 
         // Disable the pickup object renderer
         gameObject.SetActive(false);
+
+        // Destroy the pickup object if needed
+        Destroy(gameObject);
     }
 
-    private void DisableItemsWithTags()
+    private void EnableObjectsOnPickup()
     {
-        foreach (string tag in tagsToEnable)
+        foreach (GameObject obj in disabledObjects)
         {
-            GameObject[] allObjectsWithTag = GameObject.FindGameObjectsWithTag(tag);
-
-            foreach (GameObject obj in allObjectsWithTag)
-            {
-                if (obj != gameObject && !IsChildOfCamera(obj))
-                {
-                    obj.SetActive(false); // Disable the object.
-                }
-            }
+            obj.SetActive(true); // Enable the associated object.
         }
-    }
-
-    private void EnableItemsWithTags()
-    {
-        foreach (GameObject item in disabledItems)
-        {
-            if (IsChildOfCamera(item))
-            {
-                item.SetActive(true); // Enable the object.
-            }
-        }
-    }
-
-    private bool IsChildOfCamera(GameObject obj)
-    {
-        Transform parent = obj.transform.parent;
-
-        while (parent != null)
-        {
-            if (parent == Camera.main.transform)
-            {
-                return true;
-            }
-
-            parent = parent.parent;
-        }
-
-        return false;
     }
 }

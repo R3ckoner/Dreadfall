@@ -1,90 +1,76 @@
-/*using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerInventory : MonoBehaviour
 {
-    public float pickupRange = 2f;
-    public Material outlineMaterial;
-    public string playerTag = "Player"; // Set the tag of your player clones.
-    public List<GameObject> itemsInventory = new List<GameObject>(); // List to store picked up items.
+    public KeyCode[] gunSwitchKeys; // Assign keys for switching guns
+    public KeyCode pickupKey = KeyCode.E;
 
-    private bool canPickUp = false;
-    private Material originalMaterial;
-    private TypewriterEffect typewriterEffect;
+    private Transform[] guns;
+    private int currentGunIndex = 0;
 
-    private void Start()
+    void Start()
     {
-        originalMaterial = GetComponent<Renderer>().material;
-        typewriterEffect = FindObjectOfType<TypewriterEffect>();
-
-        // OutlineMaterial reference should be assigned manually in the Inspector.
-        if (outlineMaterial == null)
+        // Get all child guns of the camera
+        guns = new Transform[transform.childCount];
+        for (int i = 0; i < transform.childCount; i++)
         {
-            Debug.LogError("OutlineMaterial reference not assigned in the Inspector.");
+            guns[i] = transform.GetChild(i);
         }
+
+        SwitchGun(currentGunIndex);
     }
 
     void Update()
     {
-        if (canPickUp && Input.GetKeyDown(KeyCode.E))
+        // Check for gun switching input
+        for (int i = 0; i < gunSwitchKeys.Length; i++)
         {
-            PickUp();
-            if (typewriterEffect != null)
+            if (Input.GetKeyDown(gunSwitchKeys[i]))
             {
-                typewriterEffect.StartTypingEffect("Picked up item");
+                SwitchGun(i);
             }
         }
 
-        if (outlineMaterial != null)
+        // Check for picking up a gun
+        if (Input.GetKeyDown(pickupKey))
         {
-            GetComponent<Renderer>().material = canPickUp ? outlineMaterial : originalMaterial;
+            TryPickupGun();
         }
     }
 
-    public void PickUp()
+    void SwitchGun(int index)
     {
-        EnableAllItemsWithTag("Item");
-
-        // Add the item to the inventory
-        itemsInventory.Add(gameObject);
-
-        // Disable the pickup object renderer
-        gameObject.SetActive(false);
-    }
-
-    private void EnableAllItemsWithTag(string tag)
-    {
-        GameObject[] items = GameObject.FindGameObjectsWithTag(tag);
-
-        foreach (GameObject item in items)
+        // Deactivate the current gun
+        if (currentGunIndex >= 0 && currentGunIndex < guns.Length)
         {
-            item.SetActive(true);
+            guns[currentGunIndex].gameObject.SetActive(false);
+        }
+
+        // Activate the new gun
+        currentGunIndex = index;
+        if (currentGunIndex >= 0 && currentGunIndex < guns.Length)
+        {
+            guns[currentGunIndex].gameObject.SetActive(true);
         }
     }
 
-    private void FixedUpdate()
+    void TryPickupGun()
     {
-        Camera mainCamera = Camera.main; // Get the main camera
-
-        if (mainCamera != null)
+        // Check if there's a gun in front of the player to pick up
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, transform.forward, out hit, 3f))
         {
-            Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-            RaycastHit hit;
+            Transform gunToPickup = hit.collider.transform;
 
-            if (Physics.Raycast(ray, out hit) && hit.distance <= pickupRange)
+            // Check if the picked-up gun is a child of the camera
+            for (int i = 0; i < guns.Length; i++)
             {
-                canPickUp = (hit.collider.gameObject == gameObject);
+                if (gunToPickup == guns[i])
+                {
+                    SwitchGun(i);
+                    break;
+                }
             }
-            else
-            {
-                canPickUp = false;
-            }
-        }
-        else
-        {
-            Debug.LogError("Main camera not found in the scene.");
         }
     }
 }
-
-*/
